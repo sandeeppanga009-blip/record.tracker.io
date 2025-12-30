@@ -108,6 +108,9 @@ button {
 <script>
 const API_URL = "https://sheetdb.io/api/v1/sb1gby1kvczgk";
 
+// Load already submitted names
+let submittedNames = JSON.parse(localStorage.getItem("submitted_names")) || [];
+
 function getValues(id) {
     return [...document.querySelectorAll(`#${id} input:checked`)]
         .map(x => x.value)
@@ -115,19 +118,30 @@ function getValues(id) {
 }
 
 function submitData() {
-    const name = document.getElementById("name").value.trim();
+    const nameInput = document.getElementById("name");
+    const originalName = nameInput.value.trim();
+    const nameKey = originalName.toLowerCase(); // for comparison
+
     const tools = getValues("tools");
     const safety = getValues("safety");
     const equipment = getValues("equipment");
 
-    if (!name || !tools || !safety || !equipment) {
+    if (!originalName || !tools || !safety || !equipment) {
         alert("All fields are mandatory");
+        return;
+    }
+
+    // 🚫 BLOCK SAME NAME
+    if (submittedNames.includes(nameKey)) {
+        document.getElementById("msg").innerText =
+            "Record already submitted for this person.";
+        document.getElementById("msg").style.color = "red";
         return;
     }
 
     const payload = {
         data: [{
-            Name: name,
+            Name: originalName,
             Tools: tools,
             SafetyEquipment: safety,
             Equipment: equipment,
@@ -147,6 +161,13 @@ function submitData() {
         console.log(res);
 
         if (res.created === 1) {
+            // ✅ Save name after SUCCESS
+            submittedNames.push(nameKey);
+            localStorage.setItem(
+                "submitted_names",
+                JSON.stringify(submittedNames)
+            );
+
             document.getElementById("msg").innerText =
                 "Record submitted successfully!";
             document.getElementById("msg").style.color = "green";
@@ -160,6 +181,7 @@ function submitData() {
     });
 }
 </script>
+
 
 </body>
 </html>
