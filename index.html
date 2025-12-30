@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tool Issue Record</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #eef2f5;
+    padding: 40px 0;
+}
+
+.container {
+    width: 420px;
+    background: #fff;
+    margin: auto;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+}
+
+label {
+    font-weight: bold;
+    margin-top: 15px;
+    display: block;
+}
+
+input, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.checkbox-group {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 6px;
+}
+
+.checkbox-group label {
+    display: block;
+    font-weight: normal;
+}
+
+button {
+    background: #28a745;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+.message {
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>Tool Issue Record</h2>
+
+<label>Person Name *</label>
+<input id="name" type="text">
+
+<label>Tools *</label>
+<div class="checkbox-group" id="tools">
+<label><input type="checkbox" value="Cutting Plier"> Cutting Plier</label>
+<label><input type="checkbox" value="Multimeter"> Multimeter</label>
+<label><input type="checkbox" value="Wire Stripper"> Wire Stripper</label>
+<label><input type="checkbox" value="Screwdriver Set"> Screwdriver Set</label>
+<label><input type="checkbox" value="Insulation Tape"> Insulation Tape</label>
+</div>
+
+<label>Safety Equipment *</label>
+<div class="checkbox-group" id="safety">
+<label><input type="checkbox" value="Hand Gloves"> Hand Gloves</label>
+<label><input type="checkbox" value="Safety Glasses"> Safety Glasses</label>
+<label><input type="checkbox" value="Hard Hat"> Hard Hat</label>
+<label><input type="checkbox" value="Safety Shoes"> Safety Shoes</label>
+<label><input type="checkbox" value="Ear Plugs"> Ear Plugs</label>
+</div>
+
+<label>Equipment *</label>
+<div class="checkbox-group" id="equipment">
+<label><input type="checkbox" value="Laptop"> Laptop</label>
+<label><input type="checkbox" value="Charger"> Charger</label>
+<label><input type="checkbox" value="Wi-Fi Router"> Wi-Fi Router</label>
+<label><input type="checkbox" value="Basic Debugging Kit"> Basic Debugging Kit</label>
+</div>
+
+<button onclick="submitData()">Submit Record</button>
+<div id="msg" class="message"></div>
+</div>
+
+<script>
+const API_URL = "https://sheetdb.io/api/v1/sb1gby1kvczgk";
+
+function getValues(id) {
+    return [...document.querySelectorAll(`#${id} input:checked`)]
+        .map(x => x.value)
+        .join(", ");
+}
+
+function submitData() {
+    const name = document.getElementById("name").value.trim();
+    const tools = getValues("tools");
+    const safety = getValues("safety");
+    const equipment = getValues("equipment");
+
+    if (!name || !tools || !safety || !equipment) {
+        alert("All fields are mandatory");
+        return;
+    }
+
+    const payload = {
+        data: [{
+            Name: name,
+            Tools: tools,
+            SafetyEquipment: safety,
+            Equipment: equipment,
+            DateTime: new Date().toLocaleString(),
+            Returned: "No",
+            ReturnDate: ""
+        }]
+    };
+
+    fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(res => {
+        console.log(res);
+
+        if (res.created === 1) {
+            document.getElementById("msg").innerText =
+                "Record submitted successfully!";
+            document.getElementById("msg").style.color = "green";
+        } else {
+            throw "Row not created";
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("FAILED: Data not saved. Check SheetDB setup.");
+    });
+}
+</script>
+
+</body>
+</html>
